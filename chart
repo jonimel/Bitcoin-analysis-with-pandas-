@@ -1,0 +1,36 @@
+# create 7 days chart 
+
+import numpy as np
+import pandas as pd
+#Data Source
+import yfinance as yf
+#Data viz
+import plotly.graph_objs as go
+ 
+#Importing market data
+data = yf.download(tickers='BTC-USD',start = '2021-11-30',end='2021-12-07',period = '7d', interval = '60m')
+ 
+#Adding Moving average calculated field
+data['MA5'] = data['Close'].rolling(5).mean()
+data['MA20'] = data['Close'].rolling(20).mean()
+
+
+#declare figure
+fig = go.Figure()
+ 
+#Candlestick
+fig.add_trace(go.Candlestick(x=data.index,
+                open=data['Open'],
+                high=data['High'],
+                low=data['Low'],
+                close=data['Close'], name = 'market data'))
+ 
+
+ 
+#Add Moving average on the graph
+fig.add_trace(go.Scatter(x=data.index, y= data['MA20'],line=dict(color='blue', width=1.5), name = 'Long Term MA'))
+fig.add_trace(go.Scatter(x=data.index, y= data['MA5'],line=dict(color='orange', width=1.5), name = 'Short Term MA'))
+
+#Show
+fig.show()
+
