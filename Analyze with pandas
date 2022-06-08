@@ -1,0 +1,145 @@
+ #import file and libraries
+ 
+import pandas as pd
+import matplotlib.pyplot as plt
+from statistics import stdev
+import scipy.stats
+import numpy as np
+%matplotlib inline 
+file = 'C:\BTC-Hourly.csv'
+df = pd.read_csv(file)
+
+#change datetime
+
+from datetime import datetime #change timestamp to yyyy-mm-dd
+def timerange_data(file,first_day,last_day):
+    df['date'] = pd.to_datetime(df['date']).dt.date
+    date = df['date'].astype('datetime64[ns]')
+    dates = (first_day <= date) & (date <= last_day)
+    new_df = df[dates]
+    return new_df
+   
+# call function
+
+my_df = timerange_data(file,'2021-11-30','2021-12-07') #assign to varible
+my_df['date'] = pd.to_datetime(my_df['date'])
+
+ #round for convenience
+ 
+my_df['Volume_USD'] = my_df['Volume_USD'].round(2)
+my_df['Volume_BTC'] = my_df['Volume_BTC'].round(2)
+
+# split for weekend and middle of week
+
+d1 = (my_df[my_df['date'] <= '2021-12-02'])
+d2 = (my_df[my_df['date'] >= '2021-12-06'])
+middle_of_week = (my_df[my_df['date'] <= '2021-12-02'])
+pd.concat([d1,d2])
+weekend = my_df[my_df['date'].between('2021-12-03','2021-12-05')]
+
+weekend_avg = weekend['Volume_USD'].mean() # the volume avg is double at weekends! 
+middle_avg = middle_of_week['Volume_USD'].mean()
+
+# bar chart to present
+
+endof = [weekend_avg]
+middleof = [middle_avg]
+  
+n=1
+r = np.arange(n)
+width = 0.25
+  
+  
+plt.bar(r, endof, color = 'b',
+        width = width, edgecolor = 'black',
+        label='endofweek')
+plt.bar(r + width, middleof, color = 'lightblue',
+        width = width, edgecolor = 'black',
+        label='middleofweek')
+  
+plt.ylabel("average trade volume in Millions")
+plt.title("volume weekend\middle of week")
+  
+# plt.grid(linestyle='--')
+plt.xticks(r + width/2,['2021-11-30 to 2021-12-07'])
+plt.legend()
+  
+plt.show()
+weekend_split_middle = (weekend['Volume_USD'].mean() / middle_of_week['Volume_USD'].mean())
+print(f"the voluem at weekend is {weekend_split_middle} higher than middle of the week")
+
+#varible of everyday at week
+
+tuesday_var = my_df[my_df['date'] == '2021-11-30']
+wendnesday_var = my_df[my_df['date'] == '2021-12-01']
+thursday_var = my_df[my_df['date'] == '2021-12-02']
+friday_var = my_df[my_df['date'] == '2021-12-03']
+saturday_var = my_df[my_df['date'] == '2021-12-04']
+sunday_var = my_df[my_df['date'] == '2021-12-05']
+monday_var = my_df[my_df['date'] == '2021-12-06']
+
+#information about wallets
+
+wallet_per_week = monday_var['active_wallets'].max() - tuesday_var['active_wallets'].min() 
+daily_wallet = wallet_per_week / 7 
+print('Total wallets the opened during the week is:',wallet_per_week)
+print('The daily average is:',daily_wallet)
+
+# understand which day have the highest account resigtristions 
+
+d_monday = my_df[my_df['date'] == '2021-12-06']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-06']['active_wallets'].min()
+d_tuesday = my_df[my_df['date'] == '2021-11-30']['active_wallets'].max() - my_df[my_df['date'] == '2021-11-30']['active_wallets'].min()
+d_wendnesday = my_df[my_df['date'] == '2021-12-01']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-01']['active_wallets'].min()
+d_thursday = my_df[my_df['date'] == '2021-12-02']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-02']['active_wallets'].min()
+d_friday = my_df[my_df['date'] == '2021-12-03']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-03']['active_wallets'].min()
+d_saturday = my_df[my_df['date'] == '2021-12-04']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-04']['active_wallets'].min()
+d_sunday = my_df[my_df['date'] == '2021-12-05']['active_wallets'].max() - my_df[my_df['date'] == '2021-12-05']['active_wallets'].min()
+
+
+print('total accounts open in monday is % s ' % d_monday)
+print('total accounts open in tuesday is % s ' % d_tuesday)
+print('total accounts open in wednesday is % s ' % d_wendnesday)
+print('total accounts open in thursday is % s ' % d_thursday)
+print('total accounts open in friday is % s ' % d_friday)
+print('total accounts open in saturday is % s ' % d_saturday)
+print('total accounts open in sunday % s ' % d_sunday)
+
+#visualize our insights 
+
+data = [sunday,monday,tuesday,wendnesday,thursday,friday,saturday] 
+
+plt.plot(data, color='blue', marker='o',mfc='pink' ) #plot the data
+plt.xticks(range(0,len(data), 1)) #set the tick frequency on x-axis
+plt.ylabel('amount of accounts') #set the label for y axis
+plt.xlabel('days of week sunday to saturday') #set the label for x-axis
+plt.title("amout of new acoount in a week") #set the title of the graph
+plt.show() #display the graph
+
+#close prices and transictions
+
+close_prices = [monday_var['close'].max(),tuesday_var['close'].max(),wendnesday_var['close'].max(),
+thursday_var['close'].max(),friday_var['close'].max(),saturday_var['close'].max(),sunday_var['close'].max()]
+
+monday_tra = my_df[my_df['date'] == '2021-12-06']['transictions'].max() - my_df[my_df['date'] == '2021-12-06']['transictions'].min()
+tuesday_tra = my_df[my_df['date'] == '2021-11-30']['transictions'].max() - my_df[my_df['date'] == '2021-11-30']['transictions'].min()
+wendnesday_tra = my_df[my_df['date'] == '2021-12-01']['transictions'].max() - my_df[my_df['date'] == '2021-12-01']['transictions'].min()
+thursday_tra = my_df[my_df['date'] == '2021-12-02']['transictions'].max() - my_df[my_df['date'] == '2021-12-02']['transictions'].min()
+friday_tra = my_df[my_df['date'] == '2021-12-03']['transictions'].max() - my_df[my_df['date'] == '2021-12-03']['transictions'].min()
+saturday_tra = my_df[my_df['date'] == '2021-12-04']['transictions'].max() - my_df[my_df['date'] == '2021-12-04']['transictions'].min()
+sunday_tra = my_df[my_df['date'] == '2021-12-05']['transictions'].max() - my_df[my_df['date'] == '2021-12-05']['transictions'].min()
+
+trans_list = [monday_tra,tuesday_tra,wendnesday_tra,thursday_tra,
+             friday_tra,saturday_tra,sunday_tra]
+
+#statistics methods 
+
+scipy.stats.pearsonr(close_prices,trans_list) #person test result weak connection
+
+#linear connection 
+
+new_wallets = [d_monday,d_tuesday,d_wendnesday,d_thursday,d_friday,d_saturday,d_sunday]
+trans_list1 = [monday_tra,tuesday_tra,wendnesday_tra,thursday_tra,
+             friday_tra,saturday_tra,sunday_tra]
+result = scipy.stats.linregress(trans_list1 , new_wallets)
+result.rvalue
+#result.pvalue
